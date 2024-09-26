@@ -147,7 +147,6 @@ func TestTransferTxDeadlock(t *testing.T) {
 		}()
 	}
 
-
 	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
