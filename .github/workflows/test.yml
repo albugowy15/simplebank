@@ -38,6 +38,8 @@ jobs:
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/bin/
           which migrate
+      - name: Create app.env
+        run: cp app.env.example app.env
       - name: Run migrations
         run: make migrateup
       - name: Test

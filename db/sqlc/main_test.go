@@ -16,7 +16,7 @@ var testStore Store
 func TestMain(m *testing.M) {
 	config, err := utils.LoadConfig("../..")
 	if err != nil {
-		log.Fatal("cannot load config:", err)
+		log.Println("cannot load config:", err)
 	}
 
 	connPool, err := pgxpool.New(context.Background(), config.DBSource)
