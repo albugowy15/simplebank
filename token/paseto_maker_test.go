@@ -1,7 +1,7 @@
 package token
 
 import (
-	"simplebank/utils"
+	"github.com/albugowy15/simplebank/utils"
 	"testing"
 	"time"
 

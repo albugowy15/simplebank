@@ -1,9 +1,9 @@
 package api
 
 import (
+	db "github.com/albugowy15/simplebank/db/sqlc"
+	"github.com/albugowy15/simplebank/utils"
 	"os"
-	db "simplebank/db/sqlc"
-	"simplebank/utils"
 	"testing"
 	"time"
 

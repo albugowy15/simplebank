@@ -2,9 +2,9 @@ package api
 
 import (
 	"fmt"
-	db "simplebank/db/sqlc"
-	"simplebank/token"
-	"simplebank/utils"
+	db "github.com/albugowy15/simplebank/db/sqlc"
+	"github.com/albugowy15/simplebank/token"
+	"github.com/albugowy15/simplebank/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"

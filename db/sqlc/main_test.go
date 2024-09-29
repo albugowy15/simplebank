@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
+	"github.com/albugowy15/simplebank/utils"
 	"log"
 	"os"
-	"simplebank/utils"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"

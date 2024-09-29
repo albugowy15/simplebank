@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"simplebank/utils"
+	"github.com/albugowy15/simplebank/utils"
 	"testing"
 	"time"
 

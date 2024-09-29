@@ -3,8 +3,8 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/albugowy15/simplebank/token"
 	"net/http"
-	"simplebank/token"
 	"strings"
 
 	"github.com/gin-gonic/gin"

@@ -2,9 +2,9 @@ package api
 
 import (
 	"errors"
+	db "github.com/albugowy15/simplebank/db/sqlc"
+	"github.com/albugowy15/simplebank/token"
 	"net/http"
-	db "simplebank/db/sqlc"
-	"simplebank/token"
 
 	"github.com/gin-gonic/gin"
 )

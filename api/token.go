@@ -3,8 +3,8 @@ package api
 import (
 	"errors"
 	"fmt"
+	db "github.com/albugowy15/simplebank/db/sqlc"
 	"net/http"
-	db "simplebank/db/sqlc"
 	"time"
 
 	"github.com/gin-gonic/gin"

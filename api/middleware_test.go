@@ -2,9 +2,9 @@ package api
 
 import (
 	"fmt"
+	"github.com/albugowy15/simplebank/token"
 	"net/http"
 	"net/http/httptest"
-	"simplebank/token"
 	"testing"
 	"time"
 
