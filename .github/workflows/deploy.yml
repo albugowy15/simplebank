@@ -55,6 +55,6 @@ jobs:
                 echo "No running container named $REPOSITORY found."
             fi
             echo "Running the new Docker container..."
-            docker run -p 8080:8080 -p 9090:9090 --env-file app.env --name $REPOSITORY -d \
+            docker run -p 8080:8080 -p 9090:9090 -p 7070:7070 --env-file app.env --name $REPOSITORY -d \
             $REGISTRY/$REPOSITORY:$IMAGE_TAG
             echo "Done!"
