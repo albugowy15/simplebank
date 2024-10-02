@@ -10,13 +10,15 @@ import (
 	"github.com/albugowy15/simplebank/gapi"
 	pb "github.com/albugowy15/simplebank/pb"
 	"github.com/albugowy15/simplebank/utils"
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -30,6 +32,7 @@ func main() {
 		log.Fatal("Can't connect to the database:", err)
 	}
 
+	runDBMigration(config.MigrationURL, config.DBSource)
 	store := db.NewStore(connPool)
 	go runGatewayServer(config, store)
 	runGrpcServer(config, store)
@@ -95,4 +98,16 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	if err := http.Serve(listener, mux); err != nil {
 		log.Fatal("cannot start HTTP gateway server:", err)
 	}
+}
+
+func runDBMigration(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatal("cannot create new migrate instance:", err)
+	}
+	if err := migration.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("failed to run migrate up:", err)
+	}
+
+	log.Println("db migrated successfully")
 }
