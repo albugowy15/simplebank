@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/albugowy15/simplebank/api"
 	db "github.com/albugowy15/simplebank/db/sqlc"
 	"github.com/albugowy15/simplebank/gapi"
 	pb "github.com/albugowy15/simplebank/pb"
@@ -35,6 +36,7 @@ func main() {
 	runDBMigration(config.MigrationURL, config.DBSource)
 	store := db.NewStore(connPool)
 	go runGatewayServer(config, store)
+	go runGinServer(config, store)
 	runGrpcServer(config, store)
 }
 
@@ -110,4 +112,16 @@ func runDBMigration(migrationURL string, dbSource string) {
 	}
 
 	log.Println("db migrated successfully")
+}
+
+func runGinServer(config utils.Config, store db.Store) {
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server", err)
+	}
+
+	err = server.Start(config.GinServerAddress)
+	if err != nil {
+		log.Fatal("cannot start server", err)
+	}
 }
