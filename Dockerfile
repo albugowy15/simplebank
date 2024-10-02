@@ -2,6 +2,7 @@
 FROM golang:1.23-alpine3.20 AS builder
 WORKDIR /app
 COPY . .
+RUN go mod download
 RUN go build -o main main.go
 
 # Run stage
@@ -13,6 +14,6 @@ COPY start.sh .
 COPY wait-for.sh .
 COPY db/migrations ./db/migrations
 
-EXPOSE 8080
+EXPOSE 8080 9090
 CMD [ "/app/main" ]
 ENTRYPOINT [ "/app/start.sh" ]
