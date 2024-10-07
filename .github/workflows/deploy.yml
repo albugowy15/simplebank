@@ -45,6 +45,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           envs: REGISTRY,REPOSITORY,IMAGE_TAG
           script: |
+            set -e
             docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
             if [ $(docker ps -q -f name=$REPOSITORY) ]; then
                 echo "Stopping the current running container..."
@@ -52,9 +53,9 @@ jobs:
                 echo "Removing the current container..."
                 docker rm $REPOSITORY
             else
-                echo "No running container named $REPOSITORY found."
+                echo "No running container found."
             fi
             echo "Running the new Docker container..."
-            docker run -p 8080:8080 -p 9090:9090 -p 7070:7070 --env-file app.env --name $REPOSITORY -d \
+            docker run --network=host -p 8080:8080 -p 9090:9090 -p 7070:7070 --env-file app.env --name $REPOSITORY -d \
             $REGISTRY/$REPOSITORY:$IMAGE_TAG
             echo "Done!"
