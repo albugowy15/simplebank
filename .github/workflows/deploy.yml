@@ -14,7 +14,7 @@ jobs:
         name: Checkout
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -22,7 +22,7 @@ jobs:
 
       - name: Push image
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
       - name: Build, tag, and push docker image to Amazon ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -33,7 +33,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: Pull and run image
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.1.0
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: simplebank
@@ -46,16 +46,13 @@ jobs:
           envs: REGISTRY,REPOSITORY,IMAGE_TAG
           script: |
             set -e
+            docker stop $REPOSITORY || true
+            docker rm $REPOSITORY || true
             docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            if [ $(docker ps -q -f name=$REPOSITORY) ]; then
-                echo "Stopping the current running container..."
-                docker stop $REPOSITORY
-                echo "Removing the current container..."
-                docker rm $REPOSITORY
-            else
-                echo "No running container found."
-            fi
-            echo "Running the new Docker container..."
-            docker run --network=host -p 8080:8080 -p 9090:9090 -p 7070:7070 --env-file app.env --name $REPOSITORY -d \
-            $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            echo "Done!"
+            docker run --network=host \
+              -p 8080:8080 -p 9090:9090 -p 7070:7070 \
+              --env-file app.env \
+              --name $REPOSITORY \
+              --restart unless-stopped \
+              -d $REGISTRY/$REPOSITORY:$IMAGE_TAG
+            docker system prune -af
