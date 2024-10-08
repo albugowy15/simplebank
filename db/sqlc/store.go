@@ -12,7 +12,6 @@ type Store interface {
 	CreateUserTx(ctx context.Context, arg CreateUserTxParams) (CreateUserTxResult, error)
 }
 
-// Store provides all functions to execute db queries and transactions
 type SQLStore struct {
 	*Queries
 	connPool *pgxpool.Pool

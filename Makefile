@@ -8,10 +8,13 @@ dropdb:
 	docker exec -t postgres16 dropdb simplebank_db
 
 migrateup:
-	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simplebank_db?sslmode=disable" -verbose up
+	migrate -path db/migrations -database "${DB_URL}" -verbose up
 
 migratedown:
-	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simplebank_db?sslmode=disable" -verbose down
+	migrate -path db/migrations -database "${DB_URL}" -verbose down
+
+new_migration:
+	migrate create -ext sql -dir db/migrations -seq ${name}
 
 sqlc:
 	sqlc generate
@@ -24,6 +27,7 @@ server:
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/albugowy15/simplebank/db/sqlc Store
+	mockgen -package mockwk -destination worker/mock/distributor.go github.com/albugowy15/simplebank/worker TaskDistributor
 
 proto:
 	rm -f pb/*.go
@@ -33,4 +37,4 @@ proto:
 	proto/*.proto
 
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server mock proto
+.PHONY: postgres createdb dropdb migrateup migratedown new_migration sqlc test server mock proto
