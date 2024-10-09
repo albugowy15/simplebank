@@ -1,12 +1,9 @@
 package gapi
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"io"
 	"reflect"
 	"testing"
 
@@ -54,6 +51,21 @@ func (e eqCreateUserTxParamsMatcher) String() string {
 
 func EqCreateUserTxParams(arg db.CreateUserTxParams, password string, user db.User) gomock.Matcher {
 	return eqCreateUserTxParamsMatcher{arg, password, user}
+}
+
+func randomUser(t *testing.T) (user db.User, password string) {
+	password = utils.RandomString(6)
+	hashedPassword, err := utils.HashPassword(password)
+	require.NoError(t, err)
+
+	user = db.User{
+		Username:       utils.RandomOwner(),
+		Role:           utils.DepositorRole,
+		HashedPassword: hashedPassword,
+		FullName:       utils.RandomOwner(),
+		Email:          utils.RandomEmail(),
+	}
+	return
 }
 
 func TestCreateUserAPI(t *testing.T) {
@@ -128,6 +140,55 @@ func TestCreateUserAPI(t *testing.T) {
 				require.Equal(t, codes.Internal, st.Code())
 			},
 		},
+		{
+			name: "DuplicateUsername",
+			req: &pb.CreateUserRequest{
+				Username: user.Username,
+				Password: password,
+				FullName: user.FullName,
+				Email:    user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore, taskDistributor *mockwk.MockTaskDistributor) {
+				store.EXPECT().
+					CreateUserTx(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.CreateUserTxResult{}, db.ErrUniqueViolation)
+
+				taskDistributor.EXPECT().
+					DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, res *pb.CreateUserResponse, err error) {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				require.Equal(t, codes.AlreadyExists, st.Code())
+			},
+		},
+		{
+			name: "InvalidEmail",
+			req: &pb.CreateUserRequest{
+				Username: user.Username,
+				Password: password,
+				FullName: user.FullName,
+				Email:    "invalid-email",
+			},
+			buildStubs: func(store *mockdb.MockStore, taskDistributor *mockwk.MockTaskDistributor) {
+				store.EXPECT().
+					CreateUserTx(gomock.Any(), gomock.Any()).
+					Times(0)
+
+				taskDistributor.EXPECT().
+					DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, res *pb.CreateUserResponse, err error) {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				require.Equal(t, codes.InvalidArgument, st.Code())
+			},
+		},
 	}
 
 	for i := range testCases {
@@ -149,32 +210,4 @@ func TestCreateUserAPI(t *testing.T) {
 			tc.checkResponse(t, res, err)
 		})
 	}
-}
-
-func randomUser(t *testing.T) (user db.User, password string) {
-	password = utils.RandomString(6)
-	hashedPassword, err := utils.HashPassword(password)
-	require.NoError(t, err)
-
-	user = db.User{
-		Username:       utils.RandomOwner(),
-		HashedPassword: hashedPassword,
-		FullName:       utils.RandomOwner(),
-		Email:          utils.RandomEmail(),
-	}
-	return
-}
-
-func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
-
-	var gotUser db.User
-	err = json.Unmarshal(data, &gotUser)
-
-	require.NoError(t, err)
-	require.Equal(t, user.Username, gotUser.Username)
-	require.Equal(t, user.FullName, gotUser.FullName)
-	require.Equal(t, user.Email, gotUser.Email)
-	require.Empty(t, gotUser.HashedPassword)
 }
